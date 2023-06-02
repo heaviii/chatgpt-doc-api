@@ -39,7 +39,7 @@ uvicorn main:app --reload
 curl -X POST -H "content-type:application/json" 'http://127.0.0.1:8000/llm/chat'  -d '{"content": "我家的花园叫什么"}'
 ```
 
-- [stream问答文相关信息]
+- [stream流式问答文相关信息]
 
 ```
 curl -X POST -H "content-type:application/json" 'http://127.0.0.1:8000/llm/chatStream'  -d '{"content": "我家的花园叫什么"}'
