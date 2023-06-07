@@ -84,11 +84,20 @@ class LLma:
         #vectordb = Chroma.from_documents(texts, embeddings)
         vectordb = Chroma(persist_directory=Config.VECTOR_STORE_PATH, embedding_function=embeddings)
 
+        #从向量库查询prompt相关文本
+        #1.
+        # docs = vectordb.similarity_search(prompt,k=2)
+        #2.
+        #retriever = vectordb.as_retriever(search_type="cosine",search_kwargs={"k":2})# search_type="mmr", k=10, alpha=0.5, beta=0.5)
+        #docs = retriever.get_relevant_documents(prompt
+        
+
         genie = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=vectordb.as_retriever())
         return genie.run(query=prompt)
     
     def askQuestionChromaStream(generator, collection_id, prompt, index_path=Config.INDEX_JSON_PATH):
         try:
+            print("prompt:====",prompt)
             embeddings = OpenAIEmbeddings()
 
             docsearch = Chroma(persist_directory=Config.VECTOR_STORE_PATH, embedding_function=embeddings)
@@ -175,15 +184,20 @@ class LLma:
         return True
     
     def create_index_chromadb(self):
-        if os.path.exists(Config.INDEX_JSON_PATH):
+        if os.path.exists(Config.VECTOR_STORE_PATH):
             return True
+        print('create_index_chromadb')
          # 加载文件夹中的所有txt类型的文件
         split_docs = self.get_docs()
+        print(split_docs)
 
         # 初始化 openai 的 embeddings 对象
         embeddings = OpenAIEmbeddings()
         # 将 document 通过 openai 的 embeddings 对象计算 embedding 向量信息并临时存入 Chroma 向量数据库，用于后续匹配查询
-        docsearch = Chroma.from_documents(split_docs, embeddings, persist_directory=Config.VECTOR_STORE_PATH)
+        docsearch = Chroma.from_texts([t.page_content for t in split_docs], embeddings, persist_directory=Config.VECTOR_STORE_PATH)
+        res = docsearch.similarity_search(query="我家的花园叫什么",k=2)
+        print(res)
+        docsearch.persist()
         return True
     
     def create_index_pinecone(self):
@@ -199,7 +213,10 @@ class LLma:
         )
 
         index_name = "langchain-demo"
+        #pinecone.create_index(index_name, dimension=1536)
+
         
+        #docsearch = Pinecone.from_documents([t.page_content for t in split_docs], embeddings, index_name=index_name)
         docsearch = Pinecone.from_texts([t.page_content for t in split_docs], embeddings, index_name=index_name)
         return True
     
